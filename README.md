@@ -34,14 +34,15 @@ The Netlify version serves the site from `public/` and runs the quote and earnin
 Netlify Functions. Company-name search uses the included NSE equity directory,
 so matches appear as visitors type—even from the first letter—and the result count reflects all
 matching NSE equity listings in that directory. The CSV directory is a snapshot; refresh it from
-<https://archives.nseindia.com/content/equities/EQUITY_L.csv> when updating the project. The build
-copies `index.html` and the directory into the publish directory, so the Python files and
-configuration are not exposed as website content.
+<https://archives.nseindia.com/content/equities/EQUITY_L.csv> when updating the project. The
+build command copies the root-level `index.html` and `nse-equities.csv` into `public/`, and stages
+the root-level function files into Netlify's configured functions folder.
 
-1. Push the project files to a GitHub repository. Include `index.html`, `netlify.toml`,
-   `data/nse-equities.csv`, and the complete `netlify/functions/` folder. Keep each file in its
-   original path. The Python files, `render.yaml`, and `requirements.txt` are not needed for
-   Netlify, but may stay in the repository if you also want the local or Render version.
+1. Push these root-level files to a GitHub repository: `index.html`, `netlify.toml`,
+   `nse-equities.csv`, `earnings.mjs`, `quotes.mjs`, and `market.mjs`. Keep them at the repository
+   root; the Netlify build command stages the functions in the expected folder. The Python files,
+   `render.yaml`, and `requirements.txt` are not needed for Netlify, but may stay in the repository
+   if you also want the local or Render version.
 2. In Netlify, select **Add new site → Import an existing project**, connect GitHub, and select
    the repository. Netlify reads the build and Functions settings from `netlify.toml`.
 3. Deploy the site. Netlify provides a public `https://...netlify.app` link; open it to check the
@@ -57,5 +58,6 @@ can verify information themselves. Links open in a new tab; they do not silently
 The `web_app.py` server remains available for local development; Netlify uses JavaScript
 Functions for quote and earnings data.
 
-The watchlist is saved in each visitor's browser. The app does not collect accounts or personal
-financial details.
+The watchlist is saved in each visitor's browser. Visitors can remove a company from the list
+and add a replacement through the company-name search. The app does not collect accounts or
+personal financial details.
