@@ -86,6 +86,9 @@
     .steps strong { display: block; color: var(--text); margin-bottom: 4px; }
     .field-help { flex-basis: 100%; margin: -2px 0 0 0; }
     .company-search-results { max-height: 480px; overflow-y: auto; padding: 2px 4px 2px 0; }
+    .selected-companies { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+    .selected-company { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-raised); padding: 5px 7px 5px 12px; }
+    .selected-company button { padding: 4px 9px; border: 1px solid var(--line); background: transparent; color: var(--text); }
     .calendar-controls { display: flex; align-items: center; gap: 8px; }
     .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
     table { width: 100%; border-collapse: collapse; min-width: 590px; background: var(--panel); }
@@ -127,7 +130,7 @@
       <ol class="steps">
         <li><strong>1. Start with the examples</strong>The sample companies and their prices load automatically when you open this page.</li>
         <li><strong>2. Update prices anytime</strong>Select “Update prices” to check for newer available information.</li>
-        <li><strong>3. Find companies by name (optional)</strong>Type one or more letters, choose a company listed on NSE, and add it to your list. Your list is saved on this device.</li>
+        <li><strong>3. Change your company list</strong>Remove a company with its “Remove” button, then search by name and select “Add this company”. Your list is saved on this device.</li>
         <li><strong>4. Check result dates (optional)</strong>Select “Check dates” to look for planned company results announcements.</li>
       </ol>
     </section>
@@ -154,6 +157,7 @@
         <button id="save">Save list and show prices</button>
         <p class="small field-help">Choose companies by name above, or edit this list directly. Keep each stock symbol separated by a comma.</p>
       </div>
+      <div id="selected-companies" class="selected-companies" aria-label="Companies in your list"></div>
       <button id="refresh" class="secondary">Update prices</button>
     </div>
 
@@ -223,12 +227,23 @@
     const companySearchButton = document.getElementById("company-search-button");
     const companySearchStatus = document.getElementById("company-search-status");
     const companySearchResults = document.getElementById("company-search-results");
+    const selectedCompanies = document.getElementById("selected-companies");
     let companySearchMatches = [];
     let companyDirectoryPromise;
     let companySearchGeneration = 0;
 
     function getSymbols() {
       return [...new Set(symbolsInput.value.split(",").map(value => value.trim().toUpperCase()).filter(Boolean))];
+    }
+
+    function renderSelectedCompanies() {
+      const symbols = getSymbols();
+      selectedCompanies.innerHTML = symbols.map(symbol => `
+        <span class="selected-company">
+          <span>${escapeHtml(symbol)}</span>
+          <button type="button" class="secondary" data-remove-symbol="${escapeHtml(symbol)}"
+            aria-label="Remove ${escapeHtml(symbol)}">Remove</button>
+        </span>`).join("");
     }
 
     function escapeHtml(value) {
@@ -390,12 +405,13 @@
 
     function saveSymbols() {
       const symbols = getSymbols();
-      if (symbols.length === 0 || symbols.length > 5) {
-        quoteStatus.textContent = "Please enter at least one and no more than five stock symbols, separated by commas.";
+      if (symbols.length > 5) {
+        quoteStatus.textContent = "Your list can have up to five companies. Remove one before adding another.";
         return false;
       }
       localStorage.setItem("market-watch-symbols", symbols.join(", "));
       symbolsInput.value = symbols.join(", ");
+      renderSelectedCompanies();
       return true;
     }
 
@@ -423,6 +439,11 @@
 
     async function loadQuotes() {
       if (!saveSymbols()) return;
+      if (getSymbols().length === 0) {
+        quotesContainer.innerHTML = '<div class="empty">Your list is empty. Search for a company name above and select “Add this company”.</div>';
+        quoteStatus.textContent = "Add a company to see its price.";
+        return;
+      }
       refreshButton.disabled = true;
       quoteStatus.textContent = "Getting the latest available prices…";
       quotesContainer.innerHTML = '<div class="empty">Please wait while prices load…</div>';
@@ -444,6 +465,11 @@
 
     async function loadEarnings() {
       if (!saveSymbols()) return;
+      if (getSymbols().length === 0) {
+        earningsContainer.innerHTML = "";
+        earningsStatus.textContent = "Add a company to your list before checking result dates.";
+        return;
+      }
       const button = document.getElementById("load-earnings");
       button.disabled = true;
       earningsStatus.textContent = "Checking for planned results dates…";
@@ -477,10 +503,33 @@
 
     document.getElementById("save").addEventListener("click", () => {
       if (saveSymbols()) {
-        quoteStatus.textContent = "Your list is saved in this browser. Getting prices…";
-        loadQuotes();
         earningsStatus.textContent = "Your company list changed. Select “Check dates” to search again.";
         earningsContainer.innerHTML = "";
+        if (getSymbols().length) {
+          quoteStatus.textContent = "Your list is saved in this browser. Getting prices…";
+          loadQuotes();
+        } else {
+          quotesContainer.innerHTML = '<div class="empty">Your list is empty. Search for a company name above and select “Add this company”.</div>';
+          quoteStatus.textContent = "Your list is empty.";
+        }
+      }
+    });
+    symbolsInput.addEventListener("input", renderSelectedCompanies);
+    selectedCompanies.addEventListener("click", event => {
+      const button = event.target.closest("[data-remove-symbol]");
+      if (!button) return;
+      const symbolToRemove = button.dataset.removeSymbol;
+      symbolsInput.value = getSymbols().filter(symbol => symbol !== symbolToRemove).join(", ");
+      if (saveSymbols()) {
+        earningsContainer.innerHTML = "";
+        earningsStatus.textContent = "Your company list changed. Select “Check dates” to search again.";
+        if (getSymbols().length) {
+          quoteStatus.textContent = "Company removed. Updating prices…";
+          loadQuotes();
+        } else {
+          quotesContainer.innerHTML = '<div class="empty">Your list is empty. Search for a company name above and select “Add this company”.</div>';
+          quoteStatus.textContent = "Company removed. Add another company whenever you are ready.";
+        }
       }
     });
     refreshButton.addEventListener("click", loadQuotes);
@@ -496,7 +545,8 @@
     });
 
     const savedSymbols = localStorage.getItem("market-watch-symbols");
-    if (savedSymbols) symbolsInput.value = savedSymbols;
+    if (savedSymbols !== null) symbolsInput.value = savedSymbols;
+    renderSelectedCompanies();
     loadQuotes();
   </script>
 </body>
