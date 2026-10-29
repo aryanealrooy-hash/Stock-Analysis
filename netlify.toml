@@ -1,5 +1,5 @@
 [build]
-  command = "mkdir -p public && cp index.html data/nse-equities.csv public/"
+  command = "mkdir -p public netlify/functions/lib && cp index.html nse-equities.csv public/ && cp earnings.mjs quotes.mjs netlify/functions/ && cp market.mjs netlify/functions/lib/market.mjs"
   publish = "public"
   functions = "netlify/functions"
 
