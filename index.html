@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101812">
+  <title>Market Brief — Indian stocks</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101812;
+      --panel: #18231b;
+      --panel-raised: #202d23;
+      --text: #f0f3ed;
+      --muted: #a4b0a5;
+      --line: #334138;
+      --green: #b4e5a0;
+      --red: #ff9a91;
+      --amber: #f1cf86;
+      --accent: #d3ef9d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 10% 0%, #24372a 0, var(--bg) 42rem);
+      color: var(--text);
+      font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    a { color: var(--accent); }
+    .wrap { width: min(1120px, calc(100% - 36px)); margin: 0 auto; }
+    header { padding: 38px 0 24px; }
+    .eyebrow { color: var(--green); font-size: .75rem; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -.045em; line-height: 1.05; }
+    h2 { margin: 0; font-size: 1.2rem; }
+    h3 { margin: 0 0 6px; font-size: 1rem; }
+    p { margin: 8px 0; color: var(--muted); }
+    .disclaimer {
+      border: 1px solid #735f35; border-radius: 12px; background: #302919;
+      color: #f5dfac; padding: 12px 15px; margin: 12px 0 24px;
+    }
+    .toolbar, .section-head, .quote-head, .calendar-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    }
+    .toolbar { padding: 16px; border: 1px solid var(--line); background: var(--panel); border-radius: 16px; }
+    .field { display: flex; gap: 8px; flex: 1 1 360px; }
+    input, select {
+      min-width: 0; border: 1px solid var(--line); border-radius: 9px;
+      background: #111a14; color: var(--text); padding: 10px 12px;
+    }
+    input { flex: 1; }
+    input:focus, select:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button {
+      border: 0; border-radius: 9px; background: var(--accent); color: #172019;
+      padding: 10px 15px; font-weight: 750; cursor: pointer;
+    }
+    button.secondary { background: var(--panel-raised); color: var(--text); border: 1px solid var(--line); }
+    button:disabled { opacity: .6; cursor: wait; }
+    main { padding-bottom: 48px; }
+    section { margin-top: 30px; }
+    .section-head { margin-bottom: 13px; }
+    .section-head p { margin: 2px 0 0; }
+    .status { min-height: 24px; color: var(--muted); font-size: .9rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 12px; }
+    .card, .panel {
+      border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 17px;
+    }
+    .quote-head { align-items: flex-start; }
+    .symbol { font-size: .78rem; color: var(--muted); letter-spacing: .05em; }
+    .price { margin: 14px 0 2px; font-size: 1.75rem; font-weight: 750; letter-spacing: -.03em; }
+    .change { font-weight: 700; }
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .metrics { display: flex; gap: 18px; margin-top: 15px; color: var(--muted); font-size: .84rem; }
+    .metrics strong { display: block; color: var(--text); font-weight: 600; }
+    .small { color: var(--muted); font-size: .78rem; }
+    .source-links { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: .84rem; }
+    .source-links a { color: var(--accent); }
+    .help-panel { margin-top: 24px; }
+    .help-panel summary { cursor: pointer; color: var(--accent); font-weight: 700; }
+    .help-panel ul { padding-left: 20px; color: var(--muted); }
+    .quick-start { margin: 18px 0 22px; }
+    .quick-start h2 { margin-bottom: 12px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .steps li { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 14px; }
+    .steps strong { display: block; color: var(--text); margin-bottom: 4px; }
+    .field-help { flex-basis: 100%; margin: -2px 0 0 0; }
+    .company-search-results { max-height: 480px; overflow-y: auto; padding: 2px 4px 2px 0; }
+    .calendar-controls { display: flex; align-items: center; gap: 8px; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; min-width: 590px; background: var(--panel); }
+    th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: var(--muted); font-size: .76rem; letter-spacing: .07em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    .empty { padding: 20px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
+    .note { margin-top: 13px; font-size: .85rem; }
+    footer { border-top: 1px solid var(--line); padding: 22px 0 32px; color: var(--muted); font-size: .84rem; }
+    @media (max-width: 600px) {
+      .wrap { width: min(100% - 24px, 1120px); }
+      header { padding-top: 26px; }
+      .field { flex-basis: 100%; }
+      .toolbar { align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">India · Market watch</div>
+      <h1>Indian stock prices, made simpler.</h1>
+      <p>See recent share prices for a few companies and, if available, check when they may announce results.</p>
+      <nav class="source-links" aria-label="Official market information">
+        <a href="https://www.nseindia.com/" target="_blank" rel="noopener noreferrer">NSE — National Stock Exchange (opens in a new tab)</a>
+        <a href="https://www.bseindia.com/" target="_blank" rel="noopener noreferrer">BSE — Bombay Stock Exchange (opens in a new tab)</a>
+        <a href="https://investor.sebi.gov.in/" target="_blank" rel="noopener noreferrer">SEBI — investor education (opens in a new tab)</a>
+      </nav>
+    </header>
+
+    <aside class="disclaimer">
+      <strong>Please note:</strong>
+      Prices and result dates can be delayed or incorrect. This page does not tell you what to buy
+      or sell. Check important information with the exchange or company.
+    </aside>
+
+    <section class="panel quick-start" aria-labelledby="quick-start-title">
+      <h2 id="quick-start-title">Three easy steps</h2>
+      <ol class="steps">
+        <li><strong>1. Start with the examples</strong>The sample companies and their prices load automatically when you open this page.</li>
+        <li><strong>2. Update prices anytime</strong>Select “Update prices” to check for newer available information.</li>
+        <li><strong>3. Find companies by name (optional)</strong>Type one or more letters, choose a company listed on NSE, and add it to your list. Your list is saved on this device.</li>
+        <li><strong>4. Check result dates (optional)</strong>Select “Check dates” to look for planned company results announcements.</li>
+      </ol>
+    </section>
+
+    <section class="panel company-search" aria-labelledby="company-search-title">
+      <h2 id="company-search-title">Find a company by name</h2>
+      <p>Type a letter and the list will show every NSE-listed company whose name starts with it. Select “Add this company” beside the company you want.</p>
+      <form id="company-search-form" class="field" role="search">
+        <label class="small" for="company-search-input" style="align-self:center">Company name</label>
+        <input id="company-search-input" type="search" autocomplete="off"
+          placeholder="Try R or Reliance" aria-label="Company name to search">
+        <button id="company-search-button" type="submit">Search names</button>
+      </form>
+      <div id="company-search-status" class="status" role="status" aria-live="polite"></div>
+      <div id="company-search-results" class="cards company-search-results" aria-label="Company search results"></div>
+    </section>
+
+    <div class="toolbar" aria-label="Watchlist settings">
+      <div class="field">
+        <label class="small" for="symbols" style="align-self:center">Your company list</label>
+        <input id="symbols" autocomplete="off" spellcheck="false"
+          aria-label="Comma-separated stock symbols for your company list"
+          value="RELIANCE.NS, TCS.NS, INFY.NS, HDFCBANK.NS">
+        <button id="save">Save list and show prices</button>
+        <p class="small field-help">Choose companies by name above, or edit this list directly. Keep each stock symbol separated by a comma.</p>
+      </div>
+      <button id="refresh" class="secondary">Update prices</button>
+    </div>
+
+    <main>
+      <section aria-labelledby="prices-title">
+        <div class="section-head">
+          <div>
+            <h2 id="prices-title">Recent share prices</h2>
+            <p>These are the latest prices available from the data provider, not necessarily live prices.</p>
+          </div>
+          <div id="quote-status" class="status" role="status" aria-live="polite"></div>
+        </div>
+        <div id="quotes" class="cards" aria-live="polite">
+          <div class="empty">Getting prices for the example companies…</div>
+        </div>
+      </section>
+
+      <section aria-labelledby="earnings-title">
+        <div class="section-head">
+          <div>
+            <h2 id="earnings-title">Company results dates</h2>
+            <p>Check whether a planned results announcement date is available. Companies can change their dates.</p>
+          </div>
+          <div class="calendar-controls">
+            <label class="small" for="days">Look ahead</label>
+            <select id="days" aria-label="Earnings calendar date range">
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90">90 days</option>
+            </select>
+            <button id="load-earnings" class="secondary">Check dates</button>
+          </div>
+        </div>
+        <div id="earnings-status" class="status" role="status" aria-live="polite">
+          Dates are optional and may not be available. Select “Check dates” to search.
+        </div>
+        <div id="earnings"></div>
+        <p class="note">Dates come from a third-party calendar. If none are shown, check the company or stock exchange website.</p>
+      </section>
+
+      <details class="panel help-panel" id="how-to">
+        <summary>What do these numbers mean?</summary>
+        <ul>
+          <li><strong>Price change:</strong> how much the share price has changed since the previous close. A plus or green number means it went up; a minus or red number means it went down.</li>
+          <li><strong>Today’s low and high:</strong> the lowest and highest prices reported for the current trading session.</li>
+          <li><strong>Trading volume:</strong> the number of shares traded during the session.</li>
+          <li><strong>Company results:</strong> a planned date when a company may announce its financial results. Dates are not guaranteed.</li>
+          <li>Use the links on each company card to compare the price with Yahoo Finance or the relevant exchange. Your saved list stays in this browser.</li>
+        </ul>
+      </details>
+    </main>
+    <footer>
+      Data comes from other providers and may be late or incomplete. Please verify important details
+      with the exchange or company. This page is for information only, not financial advice.
+      Your saved list stays in this browser; this site does not create user accounts.
+    </footer>
+  </div>
+  <script>
+    const symbolsInput = document.getElementById("symbols");
+    const quotesContainer = document.getElementById("quotes");
+    const quoteStatus = document.getElementById("quote-status");
+    const earningsContainer = document.getElementById("earnings");
+    const earningsStatus = document.getElementById("earnings-status");
+    const refreshButton = document.getElementById("refresh");
+    const companySearchForm = document.getElementById("company-search-form");
+    const companySearchInput = document.getElementById("company-search-input");
+    const companySearchButton = document.getElementById("company-search-button");
+    const companySearchStatus = document.getElementById("company-search-status");
+    const companySearchResults = document.getElementById("company-search-results");
+    let companySearchMatches = [];
+    let companyDirectoryPromise;
+    let companySearchGeneration = 0;
+
+    function getSymbols() {
+      return [...new Set(symbolsInput.value.split(",").map(value => value.trim().toUpperCase()).filter(Boolean))];
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function formatNumber(value, digits = 2) {
+      return Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    function parseCsvRow(line) {
+      const fields = [];
+      let field = "";
+      let quoted = false;
+      for (let index = 0; index < line.length; index += 1) {
+        const character = line[index];
+        if (character === '"') {
+          if (quoted && line[index + 1] === '"') {
+            field += '"';
+            index += 1;
+          } else {
+            quoted = !quoted;
+          }
+        } else if (character === "," && !quoted) {
+          fields.push(field);
+          field = "";
+        } else {
+          field += character;
+        }
+      }
+      fields.push(field);
+      return fields;
+    }
+
+    async function loadCompanyDirectory() {
+      if (!companyDirectoryPromise) {
+        companyDirectoryPromise = fetch("/nse-equities.csv")
+          .then(async response => {
+            if (!response.ok) {
+              throw new Error(`directory file returned HTTP ${response.status}`);
+            }
+            const text = await response.text();
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            if (lines.length < 2) {
+              throw new Error("company directory is empty");
+            }
+            const headings = parseCsvRow(lines[0]).map(value => value.trim().toUpperCase());
+            const symbolColumn = headings.indexOf("SYMBOL");
+            const nameColumn = headings.indexOf("NAME OF COMPANY");
+            const seriesColumn = headings.indexOf("SERIES");
+            if (symbolColumn < 0 || nameColumn < 0 || seriesColumn < 0) {
+              throw new Error("company directory has an unexpected format");
+            }
+            return lines.slice(1).map(parseCsvRow)
+              .filter(fields => fields[seriesColumn]?.trim() === "EQ")
+              .map(fields => ({
+                symbol: `${fields[symbolColumn]?.trim()}.NS`,
+                name: fields[nameColumn]?.trim(),
+                exchange: "NSE",
+              }))
+              .filter(company => company.symbol && company.name);
+          })
+          .catch(error => {
+            companyDirectoryPromise = null;
+            throw error;
+          });
+      }
+      return companyDirectoryPromise;
+    }
+
+    async function searchCompanies() {
+      const query = companySearchInput.value.trim().toLocaleLowerCase();
+      const generation = ++companySearchGeneration;
+      companySearchResults.innerHTML = "";
+      companySearchMatches = [];
+      if (!query) {
+        companySearchButton.disabled = false;
+        companySearchStatus.textContent = "Type a letter or company name to search.";
+        return;
+      }
+
+      companySearchButton.disabled = true;
+      companySearchStatus.textContent = "Loading NSE company names…";
+      try {
+        const companies = await loadCompanyDirectory();
+        if (generation !== companySearchGeneration) return;
+        companySearchMatches = companies
+          .filter(company => company.name.toLocaleLowerCase().startsWith(query))
+          .sort((left, right) => left.name.localeCompare(right.name));
+
+        if (companySearchMatches.length === 0) {
+          companySearchStatus.textContent = `No NSE-listed company names start with “${companySearchInput.value.trim()}”. Try another letter or spelling.`;
+          return;
+        }
+
+        const resultCount = companySearchMatches.length;
+        companySearchStatus.textContent = `Found ${resultCount} NSE-listed compan${resultCount === 1 ? "y" : "ies"} starting with “${companySearchInput.value.trim()}”.`
+          + " Select the company you want to add.";
+        companySearchResults.innerHTML = companySearchMatches.map((company, index) => `
+          <article class="card">
+            <h3>${escapeHtml(company.name)}</h3>
+            <p class="symbol">NSE · ${escapeHtml(company.symbol)}</p>
+            <button type="button" class="secondary" data-company-result="${index}">Add this company</button>
+          </article>`).join("");
+      } catch (error) {
+        if (generation === companySearchGeneration) {
+          companySearchStatus.textContent = `We couldn't load the NSE company list (${error.message}). Please refresh the page or try again later.`;
+        }
+      } finally {
+        if (generation === companySearchGeneration) companySearchButton.disabled = false;
+      }
+    }
+
+    function addSearchedCompany(index) {
+      const company = companySearchMatches[index];
+      if (!company) return;
+      const symbols = getSymbols();
+      if (symbols.includes(company.symbol)) {
+        companySearchStatus.textContent = `${company.name} is already in your list.`;
+        return;
+      }
+      if (symbols.length >= 5) {
+        companySearchStatus.textContent = "Your list already has five companies. Remove one before adding another.";
+        return;
+      }
+
+      symbolsInput.value = [...symbols, company.symbol].join(", ");
+      companySearchStatus.textContent = `Added ${company.name} (${company.exchange}) to your list. Loading prices…`;
+      if (saveSymbols()) {
+        earningsContainer.innerHTML = "";
+        earningsStatus.textContent = "Your company list changed. Select “Check dates” to search again.";
+        loadQuotes();
+      }
+    }
+
+    function sourceLinks(rawSymbol) {
+      const symbol = String(rawSymbol || "").toUpperCase();
+      const yahooSymbol = symbol.startsWith("NSE:") ? `${symbol.slice(4)}.NS`
+        : symbol.startsWith("BSE:") ? `${symbol.slice(4)}.BO` : symbol;
+      const links = [
+        `<a href="https://finance.yahoo.com/quote/${encodeURIComponent(yahooSymbol)}/" target="_blank" rel="noopener noreferrer">View on Yahoo Finance (opens in a new tab)</a>`
+      ];
+      if (symbol.endsWith(".NS") || symbol.startsWith("NSE:")) {
+        const nseSymbol = symbol.startsWith("NSE:") ? symbol.slice(4) : symbol.slice(0, -3);
+        links.push(`<a href="https://www.nseindia.com/get-quotes/equity?symbol=${encodeURIComponent(nseSymbol)}" target="_blank" rel="noopener noreferrer">Verify on NSE (opens in a new tab)</a>`);
+      } else if (symbol.endsWith(".BO") || symbol.startsWith("BSE:")) {
+        links.push(`<a href="https://www.bseindia.com/stock-share-price/" target="_blank" rel="noopener noreferrer">Open BSE market data (opens in a new tab)</a>`);
+      }
+      return `<div class="source-links">${links.join("")}</div>`;
+    }
+
+    async function readJson(response) {
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `Request failed (${response.status}).`);
+      return payload;
+    }
+
+    function saveSymbols() {
+      const symbols = getSymbols();
+      if (symbols.length === 0 || symbols.length > 5) {
+        quoteStatus.textContent = "Please enter at least one and no more than five stock symbols, separated by commas.";
+        return false;
+      }
+      localStorage.setItem("market-watch-symbols", symbols.join(", "));
+      symbolsInput.value = symbols.join(", ");
+      return true;
+    }
+
+    function quoteCard(quote) {
+      if (quote.error) {
+        return `<article class="card"><h3>${escapeHtml(quote.symbol)}</h3><p>We couldn't find price information for this symbol. Check the symbol or try again later.</p>${sourceLinks(quote.symbol)}</article>`;
+      }
+      const change = Number(quote.latest_price) - Number(quote.previous_close);
+      const percent = change / Number(quote.previous_close) * 100;
+      const direction = change >= 0 ? "positive" : "negative";
+      const currency = escapeHtml(quote.currency || "");
+      return `<article class="card">
+        <div class="quote-head"><div><h3>${escapeHtml(quote.name)}</h3><div class="symbol">${escapeHtml(quote.symbol)} · ${escapeHtml(quote.exchange)}</div></div></div>
+        <div class="price">${formatNumber(quote.latest_price)} <span class="small">${currency}</span></div>
+        <div class="change ${direction}">${change >= 0 ? "+" : ""}${formatNumber(change)} (${percent >= 0 ? "+" : ""}${formatNumber(percent)}%) <span class="small">since previous close</span></div>
+        <div class="metrics">
+          <div>Today's low<strong>${formatNumber(quote.low)}</strong></div>
+          <div>Today's high<strong>${formatNumber(quote.high)}</strong></div>
+          <div>Volume<strong>${Number(quote.volume).toLocaleString()}</strong></div>
+        </div>
+        <p class="small">Quote time: ${escapeHtml(quote.quote_time || "Not provided")}</p>
+        ${sourceLinks(quote.symbol)}
+      </article>`;
+    }
+
+    async function loadQuotes() {
+      if (!saveSymbols()) return;
+      refreshButton.disabled = true;
+      quoteStatus.textContent = "Getting the latest available prices…";
+      quotesContainer.innerHTML = '<div class="empty">Please wait while prices load…</div>';
+      try {
+        const query = new URLSearchParams({ symbols: getSymbols().join(",") });
+        const data = await readJson(await fetch(`/api/quotes?${query}`));
+        quotesContainer.innerHTML = data.quotes.map(quoteCard).join("");
+        const failures = data.quotes.filter(quote => quote.error).length;
+        quoteStatus.textContent = failures
+          ? `Prices loaded, but ${failures} company price(s) could not be found. Check the symbols and try again.`
+          : "Prices are up to date with the latest information available.";
+      } catch (error) {
+        quotesContainer.innerHTML = `<div class="empty">We could not load prices right now. Please check your internet connection and try again.</div>`;
+        quoteStatus.textContent = "Prices could not be loaded.";
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
+
+    async function loadEarnings() {
+      if (!saveSymbols()) return;
+      const button = document.getElementById("load-earnings");
+      button.disabled = true;
+      earningsStatus.textContent = "Checking for planned results dates…";
+      earningsContainer.innerHTML = "";
+      try {
+        const query = new URLSearchParams({
+          symbols: getSymbols().join(","),
+          days: document.getElementById("days").value
+        });
+        const data = await readJson(await fetch(`/api/earnings?${query}`));
+        if (data.events.length === 0) {
+          earningsContainer.innerHTML = '<div class="empty">No dates were found for these companies in this period. They may not have announced a date yet. Check the company or exchange website.</div>';
+        } else {
+          const rows = data.events.map(event => `<tr>
+            <td>${escapeHtml(event.date || "Date unavailable")}</td>
+            <td><strong>${escapeHtml(event.symbol || "Company symbol not provided")}</strong>${sourceLinks(event.symbol)}</td>
+            <td>${escapeHtml(event.hour || "Not provided")}</td>
+            <td>${event.epsEstimate == null ? "—" : escapeHtml(event.epsEstimate)}</td>
+          </tr>`).join("");
+          earningsContainer.innerHTML = `<div class="table-wrap"><table>
+            <thead><tr><th>Planned date</th><th>Company symbol</th><th>Time, if known</th><th>Analyst estimate, if available</th></tr></thead>
+            <tbody>${rows}</tbody></table></div>`;
+        }
+        earningsStatus.textContent = `Showing dates between ${data.from} and ${data.to}. Dates can change.`;
+      } catch (error) {
+        earningsStatus.textContent = "We could not check dates. The date service may be unavailable or not set up yet. Please try again later.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("save").addEventListener("click", () => {
+      if (saveSymbols()) {
+        quoteStatus.textContent = "Your list is saved in this browser. Getting prices…";
+        loadQuotes();
+        earningsStatus.textContent = "Your company list changed. Select “Check dates” to search again.";
+        earningsContainer.innerHTML = "";
+      }
+    });
+    refreshButton.addEventListener("click", loadQuotes);
+    document.getElementById("load-earnings").addEventListener("click", loadEarnings);
+    companySearchForm.addEventListener("submit", event => {
+      event.preventDefault();
+      searchCompanies();
+    });
+    companySearchInput.addEventListener("input", searchCompanies);
+    companySearchResults.addEventListener("click", event => {
+      const button = event.target.closest("[data-company-result]");
+      if (button) addSearchedCompany(Number(button.dataset.companyResult));
+    });
+
+    const savedSymbols = localStorage.getItem("market-watch-symbols");
+    if (savedSymbols) symbolsInput.value = savedSymbols;
+    loadQuotes();
+  </script>
+</body>
+</html>
